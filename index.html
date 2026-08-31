@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Sell and Run</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div id="cheatMenu" class="hidden">
+  <div class="cheatPanel">
+    <h2>☠ KAOS-MENÜ ☠</h2>
+    <p>Teleportiere dich direkt zu jedem Level</p>
+    <div id="cheatLevelList"></div>
+
+    <div class="cheatDivider"></div>
+
+    <div class="cheatLivesRow">
+      <span>SCHWIERIGKEIT</span>
+      <button id="cheatDiffBtn" class="diffOpenBtn">NORMAL</button>
+    </div>
+
+    <label class="cheatToggle">
+      <input type="checkbox" id="cheatInvincible">
+      <span>UNVERWUNDBARKEIT</span>
+    </label>
+
+    <div class="cheatLivesRow">
+      <span>EXTRA LEBEN</span>
+      <div id="cheatLivesButtons"></div>
+    </div>
+
+    <button id="cheatClose">SCHLIESSEN</button>
+  </div>
+</div>
+
+<div id="diffMenu" class="hidden">
+  <div class="cheatPanel">
+    <h2>SCHWIERIGKEIT</h2>
+    <p>Wähle einen Grad oder stell dir deinen eigenen ein</p>
+    <div id="diffPresetList"></div>
+
+    <div class="cheatDivider"></div>
+
+    <div id="diffCustom">
+      <p class="diffCustomHint">EIGENE EINSTELLUNGEN</p>
+      <div class="diffSlider">
+        <label>Leben <span id="diffValLives">3</span></label>
+        <input type="range" id="diffLives" min="1" max="9" step="1" value="3">
+      </div>
+      <div class="diffSlider">
+        <label>Boss-Härte <span id="diffValBossHits">100%</span></label>
+        <input type="range" id="diffBossHits" min="50" max="200" step="10" value="100">
+      </div>
+      <div class="diffSlider">
+        <label>Boss-Tempo <span id="diffValBossSpeed">100%</span></label>
+        <input type="range" id="diffBossSpeed" min="50" max="200" step="10" value="100">
+      </div>
+      <div class="diffSlider">
+        <label>Gegner-Tempo <span id="diffValEnemy">100%</span></label>
+        <input type="range" id="diffEnemy" min="50" max="200" step="10" value="100">
+      </div>
+      <div class="diffSlider">
+        <label>Schutz nach Treffer <span id="diffValInvuln">100%</span></label>
+        <input type="range" id="diffInvuln" min="50" max="200" step="10" value="100">
+      </div>
+    </div>
+
+    <button id="diffClose">FERTIG</button>
+  </div>
+</div>
+
+<div id="settingsMenu" class="hidden">
+  <div class="cheatPanel">
+    <h2>EINSTELLUNGEN</h2>
+    <p>Grafik, Sound und Anzeige anpassen</p>
+
+    <div class="setRow">
+      <span>GRAFIK</span>
+      <div class="setBtnGroup" id="setParticles" data-key="particles"></div>
+    </div>
+    <div class="setLabelSub">Partikel-Effekte</div>
+
+    <div class="setRow">
+      <span>BILDSCHIRM-WACKELN</span>
+      <div class="setBtnGroup" id="setShake" data-key="shake"></div>
+    </div>
+
+    <div class="cheatDivider"></div>
+
+    <div class="setRow">
+      <span>MUSIK</span>
+      <div class="setBtnGroup" id="setMusic"></div>
+    </div>
+
+    <div class="setRow">
+      <span>LAUTSTÄRKE</span>
+      <div class="setBtnGroup" id="setVolume"></div>
+    </div>
+
+    <div class="cheatDivider"></div>
+
+    <div class="diffSlider">
+      <label>ANZEIGE-GRÖSSE <span id="setValScale">100%</span></label>
+      <input type="range" id="setScaleSlider" min="50" max="200" step="5" value="100">
+    </div>
+
+    <div class="cheatDivider"></div>
+    <button id="settingsClose">FERTIG</button>
+  </div>
+</div>
+
+<div id="statsMenu" class="hidden">
+  <div class="cheatPanel">
+    <h2>STATISTIK</h2>
+    <div id="statsList"></div>
+    <div class="cheatDivider"></div>
+    <p class="diffCustomHint">ERFOLGE</p>
+    <div id="achList"></div>
+    <div class="statsBtnRow">
+      <button id="statsReset" class="diffOpenBtn">STATS ZURÜCKSETZEN</button>
+      <button id="statsWipe">ALLES LÖSCHEN</button>
+    </div>
+    <button id="statsClose">FERTIG</button>
+  </div>
+</div>
+
+<div id="skinsMenu" class="hidden">
+  <div class="cheatPanel">
+    <h2>SKINS</h2>
+    <p id="skinsWallet">Konto: $0</p>
+    <div id="skinsList"></div>
+    <button id="skinsClose">FERTIG</button>
+  </div>
+</div>
+
+<script src="js/audio.js?v=21"></script>
+<script src="js/settings.js?v=21"></script>
+<script src="js/fx.js?v=21"></script>
+<script src="js/difficulty.js?v=21"></script>
+<script src="js/data/levels.js?v=21"></script>
+<script src="js/progress.js?v=21"></script>
+<script src="js/stats.js?v=21"></script>
+<script src="js/achievements.js?v=21"></script>
+<script src="js/skins.js?v=21"></script>
+<script src="js/bossrush.js?v=21"></script>
+<script src="js/entities.js?v=21"></script>
+<script src="js/scenes/MenuScene.js?v=21"></script>
+<script src="js/scenes/TutorialScene.js?v=21"></script>
+<script src="js/scenes/LevelIntroScene.js?v=21"></script>
+<script src="js/scenes/PlayScene.js?v=21"></script>
+<script src="js/scenes/ShopScene.js?v=21"></script>
+<script src="js/scenes/LevelCompleteScene.js?v=21"></script>
+<script src="js/scenes/WinScene.js?v=21"></script>
+<script src="js/scenes/GameOverScene.js?v=21"></script>
+<script src="js/scenes/PauseScene.js?v=21"></script>
+<script src="main.js?v=21"></script>
+<script src="js/cheat.js?v=21"></script>
+<script src="js/difficulty-ui.js?v=21"></script>
+<script src="js/settings-ui.js?v=21"></script>
+<script src="js/stats-ui.js?v=21"></script>
+<script src="js/skins-ui.js?v=21"></script>
+
+</body>
+</html>

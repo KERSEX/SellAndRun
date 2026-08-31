@@ -1,0 +1,274 @@
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: safe center;
+  justify-content: safe center;
+  background: #05000a;
+  overflow: auto;
+}
+
+canvas {
+  box-shadow: 0 0 24px rgba(255, 47, 208, 0.5), 0 0 70px rgba(0, 255, 242, 0.25);
+  border: 3px solid #ff2fd0;
+}
+
+#cheatMenu, #diffMenu, #settingsMenu, #statsMenu, #skinsMenu {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 0, 10, 0.92);
+  font-family: monospace;
+}
+#diffMenu, #settingsMenu, #statsMenu, #skinsMenu { z-index: 1000; }
+#cheatMenu.hidden, #diffMenu.hidden, #settingsMenu.hidden, #statsMenu.hidden, #skinsMenu.hidden { display: none; }
+
+/* ---------- Statistik & Skins ---------- */
+#statsList, #achList { margin-bottom: 14px; }
+.statRow, .achRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 12px;
+  color: #00fff2;
+  padding: 3px 0;
+}
+.statRow span:last-child { color: #ffe94a; }
+.achRow { color: #667; font-size: 11px; }
+.achRow.achOn { color: #39ff88; }
+.achRow.achOn span:last-child { color: #8ad0a0; }
+.achRow span:last-child { color: #556; }
+#achList { max-height: 150px; overflow-y: auto; }
+
+.statsBtnRow { display: flex; gap: 8px; justify-content: center; margin-bottom: 10px; }
+#statsReset { color: #ffb84a; border-color: #ffb84a; }
+#statsReset:hover { background: #ffb84a; color: #000; }
+#statsWipe {
+  font-family: monospace; font-size: 12px; padding: 8px 14px;
+  background: transparent; color: #ff3030; border: 2px solid #ff3030; cursor: pointer;
+}
+#statsWipe:hover { background: #ff3030; color: #000; }
+#statsClose {
+  font-family: monospace; font-size: 13px; padding: 10px 24px;
+  background: transparent; color: #39ff88; border: 2px solid #39ff88; cursor: pointer;
+}
+#statsClose:hover { background: #39ff88; color: #000; }
+
+#skinsList { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.skinRow { display: flex; align-items: center; gap: 12px; }
+.skinSwatch {
+  width: 26px; height: 34px; border: 2px solid #444; position: relative; flex-shrink: 0;
+}
+.skinTie { position: absolute; left: 50%; top: 6px; width: 5px; height: 16px; transform: translateX(-50%); }
+.skinName { flex: 1; text-align: left; font-size: 13px; color: #ffffff; }
+.skinRow button {
+  font-family: monospace; font-size: 12px; padding: 8px 12px;
+  background: transparent; color: #ffb84a; border: 2px solid #ffb84a; cursor: pointer; min-width: 100px;
+}
+.skinRow button:hover:not(:disabled) { background: #ffb84a; color: #000; }
+.skinRow button.active { color: #39ff88; border-color: #39ff88; }
+#skinsClose {
+  font-family: monospace; font-size: 13px; padding: 10px 24px;
+  background: transparent; color: #39ff88; border: 2px solid #39ff88; cursor: pointer;
+}
+#skinsClose:hover { background: #39ff88; color: #000; }
+
+.cheatPanel {
+  border: 3px solid #ff2fd0;
+  box-shadow: 0 0 20px #ff2fd0, 0 0 60px rgba(255, 47, 208, .4);
+  background: #0a0014;
+  padding: 30px 40px;
+  text-align: center;
+  color: #00fff2;
+  min-width: 340px;
+}
+.cheatPanel h2 {
+  color: #ff2fd0;
+  text-shadow: 0 0 10px #ff2fd0;
+  letter-spacing: 3px;
+  margin: 0 0 6px;
+  font-size: 20px;
+}
+.cheatPanel p { font-size: 12px; color: #ffe94a; margin: 0 0 18px; }
+
+#cheatLevelList { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+
+#cheatLevelList button, #cheatClose {
+  font-family: monospace;
+  font-size: 13px;
+  padding: 10px 14px;
+  background: transparent;
+  color: #39ff88;
+  border: 2px solid #39ff88;
+  cursor: pointer;
+}
+#cheatLevelList button:hover { background: #39ff88; color: #000; }
+
+#cheatClose { color: #ffe94a; border-color: #ffe94a; }
+#cheatClose:hover { background: #ffe94a; color: #000; }
+
+.cheatDivider {
+  height: 1px;
+  background: rgba(255, 47, 208, 0.4);
+  margin: 0 0 16px;
+}
+
+.cheatToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #ff2fd0;
+  margin-bottom: 16px;
+  cursor: pointer;
+  user-select: none;
+}
+.cheatToggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: #ff2fd0;
+  cursor: pointer;
+}
+
+.cheatLivesRow {
+  margin-bottom: 18px;
+  font-size: 12px;
+  color: #ff2fd0;
+}
+.cheatLivesRow > span {
+  display: block;
+  margin-bottom: 8px;
+}
+
+#cheatLivesButtons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+#cheatLivesButtons button {
+  font-family: monospace;
+  font-size: 13px;
+  width: 34px;
+  height: 34px;
+  background: transparent;
+  color: #39ff88;
+  border: 2px solid #39ff88;
+  cursor: pointer;
+}
+#cheatLivesButtons button:hover { background: rgba(57, 255, 136, 0.25); }
+#cheatLivesButtons button.active { background: #39ff88; color: #000; }
+
+/* ---------- Schwierigkeits-Menü ---------- */
+.diffOpenBtn {
+  font-family: monospace;
+  font-size: 13px;
+  padding: 8px 16px;
+  background: transparent;
+  color: #ffe94a;
+  border: 2px solid #ffe94a;
+  cursor: pointer;
+}
+.diffOpenBtn:hover { background: #ffe94a; color: #000; }
+
+#diffPresetList {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+#diffPresetList button {
+  font-family: monospace;
+  font-size: 13px;
+  padding: 12px 10px;
+  background: transparent;
+  color: #00fff2;
+  border: 2px solid #00fff2;
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+#diffPresetList button:hover { background: rgba(0, 255, 242, 0.2); }
+#diffPresetList button.active { background: #00fff2; color: #000; }
+
+.diffCustomHint {
+  font-size: 11px !important;
+  color: #ff2fd0 !important;
+  letter-spacing: 2px;
+  margin: 0 0 14px !important;
+}
+
+.diffSlider {
+  margin-bottom: 14px;
+  text-align: left;
+}
+.diffSlider label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #00fff2;
+  margin-bottom: 5px;
+}
+.diffSlider label span { color: #ffe94a; }
+.diffSlider input[type="range"] {
+  width: 100%;
+  accent-color: #ff2fd0;
+  cursor: pointer;
+}
+
+#diffClose {
+  font-family: monospace;
+  font-size: 13px;
+  padding: 10px 24px;
+  background: transparent;
+  color: #39ff88;
+  border: 2px solid #39ff88;
+  cursor: pointer;
+  margin-top: 4px;
+}
+#diffClose:hover { background: #39ff88; color: #000; }
+
+/* ---------- Einstellungen ---------- */
+.setRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: #00fff2;
+}
+.setLabelSub {
+  font-size: 10px;
+  color: #667;
+  text-align: left;
+  margin: -10px 0 14px;
+}
+.setBtnGroup {
+  display: flex;
+  gap: 6px;
+}
+.setBtnGroup button {
+  font-family: monospace;
+  font-size: 12px;
+  padding: 7px 12px;
+  background: transparent;
+  color: #ffe94a;
+  border: 2px solid #ffe94a;
+  cursor: pointer;
+}
+.setBtnGroup button:hover { background: rgba(255, 233, 74, 0.2); }
+.setBtnGroup button.active { background: #ffe94a; color: #000; }
+
+#settingsClose {
+  font-family: monospace;
+  font-size: 13px;
+  padding: 10px 24px;
+  background: transparent;
+  color: #39ff88;
+  border: 2px solid #39ff88;
+  cursor: pointer;
+}
+#settingsClose:hover { background: #39ff88; color: #000; }
