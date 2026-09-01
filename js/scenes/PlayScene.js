@@ -1,3 +1,7 @@
+// Sprung-Toleranzen (ms): kurz nach dem Absetzen bzw. kurz vor der Landung zählt der Sprung
+const COYOTE_MS = 120;
+const JUMP_BUFFER_MS = 130;
+
 class PlayScene extends Phaser.Scene {
   constructor() { super('PlayScene'); }
 
@@ -47,6 +51,8 @@ class PlayScene extends Phaser.Scene {
     this.activeEffects = { speedUntil: 0, shield: false, magnetUntil: 0 };
     this.dashUntil = 0;
     this.dashCooldownUntil = 0;
+    this.coyoteUntil = 0;
+    this.jumpBufferUntil = 0;
     this.respawnPoint = null;
     this.tookDamage = false;
     this.levelStartTime = this.time.now;
@@ -79,14 +85,21 @@ class PlayScene extends Phaser.Scene {
 
     this.physics.add.collider(this.player, this.solidGroup);
     this.physics.add.collider(this.enemiesGroup, this.solidGroup);
-    this.movingPlatformList.forEach(mp => {
-      this.physics.add.collider(this.player, mp, (pl, plat) => {
-        if (pl.body.touching.down || pl.body.blocked.down) {
-          pl.x += plat.deltaX;
-          pl.y += plat.deltaY;
-        }
-      });
-    });
+    // Bewegte Plattformen: Die Arcade-Physik nimmt den Spieler beim Auflösen der
+    // Kollision selbst mit. Das alte `pl.x += plat.deltaX` im Collider-Callback kam
+    // zusätzlich obendrauf — mit einem Delta pro Renderframe statt pro Physikschritt.
+    // Bei niedriger Bildrate rechnet Phaser mehrere Schritte pro Frame (Spieler wurde
+    // mehrfach verschoben und durch die Plattform gedrückt), bei hoher Bildrate gar
+    // keinen (Spieler rutschte herunter). Ohne den Zusatz stimmt beides.
+    this.movingPlatformList.forEach(mp => this.physics.add.collider(this.player, mp));
+    // Umkehrpunkte im Physikschritt prüfen, nicht im Renderframe: bei niedriger FPS
+    // rechnet Phaser mehrere Schritte pro Frame, sonst schießt die Plattform über
+    // ihre Grenze hinaus und ruckelt zurück.
+    this.stepPlatforms = () => this.stepMovingPlatforms();
+    const world = this.physics.world;
+    world.on('worldstep', this.stepPlatforms);
+    // world-Referenz merken: beim Szenenwechsel ist this.physics.world schon abgeräumt
+    this.events.once('shutdown', () => world.off('worldstep', this.stepPlatforms));
     this.toggleBarrierList.forEach(b => this.physics.add.collider(this.player, b));
     this.physics.add.collider(this.player, this.gate);
 
@@ -395,7 +408,13 @@ class PlayScene extends Phaser.Scene {
       Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
       Phaser.Input.Keyboard.JustDown(this.cursors.space) ||
       this.padJustDown(0); // A
-    if (jumpPressed && onGround) {
+    // Coyote-Time + Eingabepuffer: Bodenkontakt flackert auf bewegten Plattformen und
+    // an den Kanten der Bodenkacheln — ohne das schluckt das Spiel dort Sprünge.
+    if (onGround) this.coyoteUntil = time + COYOTE_MS;
+    if (jumpPressed) this.jumpBufferUntil = time + JUMP_BUFFER_MS;
+    if (time < this.jumpBufferUntil && time < this.coyoteUntil) {
+      this.jumpBufferUntil = 0;
+      this.coyoteUntil = 0;
       this.player.body.setVelocityY(-560);
       if (fxEnabled()) this.fxDust.explode(6, this.player.x, this.player.y + 24);
       if (typeof addStat === 'function') addStat('jumps');
@@ -446,7 +465,6 @@ class PlayScene extends Phaser.Scene {
     this.updateCheckpoints();
     this.applyMagnet(time);
     this.updateEnemiesPatrol(dt, time);
-    this.updateMovingPlatforms();
     this.updateToggleBarriers(dt);
     this.updateBoss(dt);
     this.cleanupProjectiles();
@@ -601,18 +619,22 @@ class PlayScene extends Phaser.Scene {
     beep(240, 0.08, 'sawtooth', 0.05);
   }
 
-  updateMovingPlatforms() {
+  // Umkehrpunkte pro Physikschritt (worldstep) prüfen, nicht pro Renderframe: bei
+  // niedriger Bildrate rechnet Phaser mehrere Schritte pro Frame, die Plattform schoss
+  // sonst über ihre Grenze hinaus und zuckte zurück. body.center ist die aktuelle
+  // Position (mp.x hinkt einen Frame nach), Rest-Überschuss wird direkt zurückgesetzt.
+  stepMovingPlatforms() {
     this.movingPlatformList.forEach(mp => {
+      const pos = mp.body.position;
       if (mp.axis === 'x') {
-        if (mp.x <= mp.minPos) mp.body.setVelocityX(mp.speed);
-        else if (mp.x >= mp.maxPos) mp.body.setVelocityX(-mp.speed);
-        mp.deltaX = mp.x - mp.prevX; mp.deltaY = 0;
+        const x = mp.body.center.x;
+        if (x <= mp.minPos) { mp.body.setVelocityX(mp.speed); if (x < mp.minPos) { pos.x += mp.minPos - x; mp.body.updateCenter(); } }
+        else if (x >= mp.maxPos) { mp.body.setVelocityX(-mp.speed); if (x > mp.maxPos) { pos.x -= x - mp.maxPos; mp.body.updateCenter(); } }
       } else {
-        if (mp.y <= mp.minPos) mp.body.setVelocityY(mp.speed);
-        else if (mp.y >= mp.maxPos) mp.body.setVelocityY(-mp.speed);
-        mp.deltaY = mp.y - mp.prevY; mp.deltaX = 0;
+        const y = mp.body.center.y;
+        if (y <= mp.minPos) { mp.body.setVelocityY(mp.speed); if (y < mp.minPos) { pos.y += mp.minPos - y; mp.body.updateCenter(); } }
+        else if (y >= mp.maxPos) { mp.body.setVelocityY(-mp.speed); if (y > mp.maxPos) { pos.y -= y - mp.maxPos; mp.body.updateCenter(); } }
       }
-      mp.prevX = mp.x; mp.prevY = mp.y;
     });
   }
 

@@ -109,6 +109,20 @@ exitStyle ('jet'|'flag'), isGunfight (nur L5), finalLevel (nur L5)`
 14. **Synthetische `KeyboardEvent`s testen Phaser-Input NICHT** — Phasers KeyboardManager reagiert
     nicht auf `window.dispatchEvent(new KeyboardEvent(...))` (keyCode wird ignoriert). Tastenpfade
     daher über direkten Handler-Aufruf verifizieren (z. B. `scene.tryPause()`), nicht per Event-Dispatch.
+15. **Bewegte Plattformen NICHT selbst mitschieben.** Die Arcade-Physik nimmt den Spieler beim
+    Auflösen der Kollision schon mit. Ein zusätzliches `pl.x += plat.deltaX` im Collider-Callback
+    verschiebt doppelt — und zwar mit einem Delta *pro Renderframe*, während Phaser mit
+    `fixedStep` mehrere Physikschritte pro Frame rechnen kann (niedrige FPS → mehrfach
+    verschoben, Spieler wird durch die Plattform gedrückt) oder gar keinen (hohe FPS →
+    Spieler rutscht herunter). Genau das war der „Plattform-Bug".
+16. **Alles, was zur Plattformbewegung gehört, im `worldstep`-Event rechnen**, nicht in
+    `update()`: `mp.x` hinkt dort einen Frame nach (`body.postUpdate` schreibt die
+    GameObject-Position erst nach `update()`), und Umkehrpunkte greifen sonst zu spät.
+    `mp.body.center` ist der aktuelle Stand. Beim Abmelden die `world`-Referenz vorher merken —
+    in `shutdown` ist `this.physics.world` schon weg.
+17. **Bodenkontakt flackert** (bewegte Plattformen, Kanten der 40px-Bodenkacheln): Sprung nie
+    direkt an `blocked.down` hängen, sondern über Coyote-Time (`COYOTE_MS`) und Eingabepuffer
+    (`JUMP_BUFFER_MS`) in PlayScene — sonst werden Sprünge verschluckt.
 
 ---
 
@@ -527,6 +541,7 @@ Gunfight-Schrotflinte funktioniert mit jedem Skin.
 | Wert | Aktuell |
 |---|---|
 | Lauftempo / Sprungkraft | 200 px/s / −560 |
+| Coyote-Time / Sprungpuffer | 120 ms / 130 ms |
 | maxVelocity Spieler | 260, 900 (F7 erhöht auf 430!) |
 | Schuss (L5): Cooldown / Tempo | 0.35s / 480 px/s |
 | Gunfight-Boss: Schuss / Cooldown / Salve | 560×mult / 0.4–0.7s÷mult / jede 3. ±0.3rad |

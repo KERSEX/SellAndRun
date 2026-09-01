@@ -136,8 +136,6 @@ function createMovingPlatform(scene, def) {
   c.speed = def.speed || 50;
   if (c.axis === 'x') c.body.setVelocityX(c.speed);
   else c.body.setVelocityY(c.speed);
-  c.prevX = c.x; c.prevY = c.y;
-  c.deltaX = 0; c.deltaY = 0;
   c.isMovingPlatform = true;
   return c;
 }
