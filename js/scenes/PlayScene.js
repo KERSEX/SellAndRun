@@ -16,9 +16,10 @@ class PlayScene extends Phaser.Scene {
     this.diff = (typeof getDifficulty === 'function') ? getDifficulty()
       : { lives: 3, bossHitsMult: 1, bossSpeedMult: 1, enemySpeedMult: 1, invulnMult: 1 };
 
-    const upg = GameState.upgrades || {};
+    // Shop-Upgrades sind gestuft (0..3) und skalieren pro Stufe
+    const upgStressball = upgradeLevel('stressball');
     let baseLives = this.diff.lives + (window.CHEATS ? window.CHEATS.extraLives : 0);
-    if (upg.stressball) baseLives += 1;
+    baseLives += upgStressball;
     // Training: feste, großzügige Lebenszahl zum Ausprobieren
     if (level.fixedLives) baseLives = level.fixedLives + (window.CHEATS ? window.CHEATS.extraLives : 0);
     this.maxLives = baseLives;
@@ -51,10 +52,10 @@ class PlayScene extends Phaser.Scene {
     this.levelStartTime = this.time.now;
     GameState.levelStartMoney = GameState.money;
 
-    this.runSpeed = upg.espresso ? 235 : 200;
-    this.sellRadius = upg.charisma ? 85 : 55;
-    this.shootCd = upg.schnellfeuer ? 0.22 : 0.35;
-    this.hasMagnetUpgrade = !!upg.magnet;
+    this.runSpeed = Math.round(200 * (1 + 0.12 * upgradeLevel('espresso')));
+    this.sellRadius = 55 + 22 * upgradeLevel('charisma');
+    this.shootCd = 0.35 * Math.pow(0.78, upgradeLevel('schnellfeuer'));
+    this.magnetLevel = upgradeLevel('magnet');
 
     this.setupBackground(level);
     this.setupWorld(level);
@@ -553,11 +554,14 @@ class PlayScene extends Phaser.Scene {
   }
 
   applyMagnet(time) {
-    const active = this.hasMagnetUpgrade || time < this.activeEffects.magnetUntil;
-    if (!active) return;
+    // Power-Up zählt wie Magnet-Stufe 1, das Upgrade zieht pro Stufe weiter und stärker
+    const lvl = Math.max(this.magnetLevel, time < this.activeEffects.magnetUntil ? 1 : 0);
+    if (lvl <= 0) return;
+    const radius = 90 + 30 * lvl;
+    const kraft = 0.09 + 0.03 * lvl;
     const pull = (obj) => {
       const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, obj.x, obj.y);
-      if (d < 120 && d > 4) { obj.x += (this.player.x - obj.x) * 0.12; obj.y += (this.player.y - obj.y) * 0.12; }
+      if (d < radius && d > 4) { obj.x += (this.player.x - obj.x) * kraft; obj.y += (this.player.y - obj.y) * kraft; }
     };
     this.contractList.forEach(ct => { if (!ct.collected) pull(ct); });
     this.coinList.forEach(co => { if (!co.collected) pull(co); });

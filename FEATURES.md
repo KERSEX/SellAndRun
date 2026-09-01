@@ -217,26 +217,32 @@ Level 2; „SPIEL STARTEN" beginnt weiter bei Level 1.
 - Neue Phaser-Scene `ShopScene` (Scene-Liste + index.html + main.js). LevelCompleteScene-„WEITER"
   → `ShopScene { levelIndex }` → deren „WEITER ZUM NÄCHSTEN LEVEL" → LevelIntroScene wie bisher.
   Nach dem letzten Level (finalLevel) KEIN Shop (WinScene direkt — Ablauf unverändert).
-- Items (einmalig kaufbar, Button wird nach Kauf „GEKAUFT ✓" + disabled-Optik):
+- Items sind **gestuft** kaufbar: max. 3 Stufen pro Item (`UPGRADE_MAX_LEVEL` in main.js),
+  jede Stufe kostet deutlich mehr als die vorige. `GameState.upgrades[id]` ist die Stufe 0..3;
+  `upgradeLevel(id)` (main.js) liest sie (alte boolesche Werte zählen als Stufe 1).
+  Button zeigt „[ STUFE n · $x ]", auf Maximalstufe „MAX ✓"; daneben Stufen-Pips ●●○.
+  Preise sind bewusst hoch: alles auf Max = $25.100, ein Run finanziert nur einen Teil davon —
+  das ist der taktische Kern (breit streuen vs. ein Item hochziehen).
 
-| Item | Effekt | Preis | Anwendung in PlayScene |
+| Item | Effekt pro Stufe (n = 1..3) | Preise Stufe 1/2/3 | Anwendung in PlayScene |
 |---|---|---|---|
-| ☕ Espresso-Abo | Lauftempo 200→235 | $400 | vx-Konstante in update() |
-| ❤ Stressball | +1 maxLives | $450 | in create() auf maxLives addieren |
-| ⚡ Schnellfeuer-Pitch | Schuss-Cooldown 0.35→0.22 (nur L5) | $500 | shootBullet() |
-| 🤝 Charisma-Seminar | Verkaufsradius 55→85 px | $350 | updateNpcs()-Radius |
-| 🧲 Klammer-Magnet | Verträge/Coins fliegen ab 90px zum Spieler | $600 | update(): Objekte mit dist<90 per `x += (player.x-x)*0.1` anziehen |
+| ☕ Espresso-Abo | Lauftempo `200 * (1 + 0.12n)` → 224/248/272 | $750/1350/2400 | vx-Konstante in update() |
+| ❤ Stressball | maxLives + n | $900/1700/3000 | in create() auf maxLives addieren |
+| ⚡ Schnellfeuer-Pitch | Schuss-Cooldown `0.35 * 0.78^n` → 0.27/0.21/0.17 (nur L5) | $850/1500/2600 | shootBullet() |
+| 🤝 Charisma-Seminar | Verkaufsradius `55 + 22n` → 77/99/121 px | $700/1250/2200 | updateNpcs()-Radius |
+| 🧲 Klammer-Magnet | Radius `90 + 30n` (120/150/180), Zugkraft `0.09 + 0.03n` | $1000/1800/3100 | `applyMagnet()`; F6-Power-Up zählt als Stufe 1 |
 
 - Layout: `addScreenBackdrop(this, 0xffe94a)`, Titel „💼 ZWISCHENHÄNDLER", Kohle-Anzeige oben,
   Items als Textzeilen `[ KAUFEN ]`-Button rechts (Phaser-Text-Buttons, Muster MenuScene).
   Zu teuer → Button grau (alpha 0.4, kein Handler).
-- Kauf: `GameState.money -= preis; GameState.upgrades.xyz = true;` beep-Kassenklang
-  (`beep(1000,...)` + `beep(1400,...,60)`).
+- Kauf: `GameState.money -= preis; GameState.upgrades[id] = upgradeLevel(id) + 1;` beep-Kassenklang
+  (`beep(1000,...)` + `beep(1400,...,60)`). Auf Maximalstufe oder bei zu wenig Kohle: Fehl-Beep.
 - **bewusste Design-Entscheidung:** Ausgegebene Kohle senkt den Endscore — Abwägung Score vs.
   Erleichterung ist gewollt. In WinScene-Text keine Änderung nötig.
 
-**Test:** Level 1 schaffen mit ≥$400 → Espresso kaufen → Level 2: Tempo spürbar höher, Kohle
-reduziert; Item im selben Run nicht doppelt kaufbar; neuer Run (Hauptmenü→Starten) = Upgrades weg.
+**Test:** Level 1 schaffen mit ≥$750 → Espresso kaufen → Level 2: Tempo spürbar höher, Kohle
+reduziert; zweite Stufe kostet $1350, nach der dritten steht „MAX ✓" und weitere Klicks tun nichts;
+neuer Run (Hauptmenü→Starten) = Upgrades weg.
 
 ---
 
