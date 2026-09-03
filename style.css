@@ -245,6 +245,7 @@ canvas {
   color: #667;
   text-align: left;
   margin: -10px 0 14px;
+  max-width: 420px;
 }
 .setBtnGroup {
   display: flex;

@@ -7,6 +7,15 @@ function fxDarken(hex, f) {
   return (r << 16) | (g << 8) | b;
 }
 
+// Mischt zwei Farben: f = 0 -> a, f = 1 -> b
+function fxMix(a, b, f) {
+  const m = (sa, sb) => Math.round(sa + (sb - sa) * f);
+  const r = m((a >> 16) & 255, (b >> 16) & 255);
+  const g = m((a >> 8) & 255, (b >> 8) & 255);
+  const bl = m(a & 255, b & 255);
+  return (r << 16) | (g << 8) | bl;
+}
+
 function fxRand(seed) {
   let s = seed > 0 ? seed : 1234;
   return () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
@@ -112,6 +121,31 @@ function buildLevelBackground(scene, level) {
   }
   scene.bgFar = scene.add.tileSprite(500, 300, 1000, 600, farKey).setScrollFactor(0).setDepth(-20);
   scene.bgMid = scene.add.tileSprite(500, 300, 1000, 600, midKey).setScrollFactor(0).setDepth(-15);
+  // Sparmodus-Farbe: überwiegend der dunkle Himmel oben, ein Hauch der Horizontfarbe.
+  // Reines bgBottom wäre bei manchen Leveln knallig (L2 ist pink) und würde die
+  // Spielfiguren erschlagen.
+  scene.bgFlatColor = fxMix(level.bgTop, level.bgBottom, 0.25);
+  applyGraphicsLevel(scene);
+}
+
+// Schaltet die Hintergrundebenen einer Szene auf die aktuelle Grafikstufe.
+// Sparmodus zeichnet die Fläche gar nicht, sondern färbt nur den Kamera-Hintergrund:
+// ein bildschirmfüllendes Bild kostet genauso viel wie ein TileSprite, gespart wird
+// erst, wenn die Fläche überhaupt nicht mehr gezeichnet wird.
+function applyGraphicsLevel(scene) {
+  if (!scene) return;
+  const parallax = (typeof bgParallaxEnabled === 'function') ? bgParallaxEnabled() : true;
+  if (scene.bgFar) scene.bgFar.setVisible(parallax);
+  if (scene.bgMid) scene.bgMid.setVisible(parallax);
+  if (scene.bgFlatColor !== undefined && scene.cameras && scene.cameras.main) {
+    scene.cameras.main.setBackgroundColor(parallax ? 0x0a0014 : scene.bgFlatColor);
+  }
+}
+
+// Nach einer Änderung im Einstellungsmenü: alle laufenden Szenen nachziehen
+function refreshGraphicsLevel() {
+  if (!window.game) return;
+  game.scene.getScenes(true).forEach(sc => applyGraphicsLevel(sc));
 }
 
 function fxPaintFar(ctx, level) {

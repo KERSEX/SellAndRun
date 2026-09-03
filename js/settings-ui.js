@@ -3,8 +3,10 @@
   const menuEl = document.getElementById('settingsMenu');
   const closeBtn = document.getElementById('settingsClose');
 
-  const particlesEl = document.getElementById('setParticles');
+  const graphicsEl = document.getElementById('setGraphics');
+  const graphicsHintEl = document.getElementById('setGraphicsHint');
   const shakeEl = document.getElementById('setShake');
+  const fullscreenBtn = document.getElementById('setFullscreen');
   const musicEl = document.getElementById('setMusic');
   const volumeEl = document.getElementById('setVolume');
   const scaleSlider = document.getElementById('setScaleSlider');
@@ -38,8 +40,29 @@
 
   const onOff = [{ label: 'AN', value: true }, { label: 'AUS', value: false }];
 
+  const GRAFIK_HINWEIS = {
+    hoch: 'Partikel-Effekte und bewegte Hintergrund-Ebenen',
+    mittel: 'Ohne Partikel-Effekte, Hintergrund bleibt bewegt',
+    niedrig: 'Ohne Partikel, einfarbiger Hintergrund statt zwei bewegter Ebenen'
+  };
+
+  function updateGraphicsHint() {
+    graphicsHintEl.textContent = GRAFIK_HINWEIS[graphicsLevel()] || '';
+  }
+
+  function updateFullscreenBtn() {
+    fullscreenBtn.textContent = isFullscreen() ? 'AUSSCHALTEN' : 'EINSCHALTEN';
+    fullscreenBtn.classList.toggle('active', isFullscreen());
+  }
+
   function buildAll() {
-    buildGroup(particlesEl, onOff, () => SETTINGS.particles, v => SETTINGS.particles = v);
+    buildGroup(graphicsEl, [
+      { label: 'HOCH', value: 'hoch' }, { label: 'MITTEL', value: 'mittel' }, { label: 'NIEDRIG', value: 'niedrig' }
+    ], () => SETTINGS.graphics, v => {
+      SETTINGS.graphics = v;
+      if (typeof refreshGraphicsLevel === 'function') refreshGraphicsLevel();
+      updateGraphicsHint();
+    });
     buildGroup(shakeEl, onOff, () => SETTINGS.shake, v => SETTINGS.shake = v);
     buildGroup(musicEl, onOff, () => SETTINGS.music, v => { SETTINGS.music = v; if (typeof updateMusicVolume === 'function') updateMusicVolume(); });
     buildGroup(volumeEl, [
@@ -48,7 +71,16 @@
     ], () => SETTINGS.volume, v => { SETTINGS.volume = v; if (typeof updateMusicVolume === 'function') updateMusicVolume(); if (v > 0) beep(700, 0.06, 'square', 0.05); });
     scaleSlider.value = SETTINGS.scale;
     scaleVal.textContent = SETTINGS.scale + '%';
+    updateGraphicsHint();
+    updateFullscreenBtn();
   }
+
+  fullscreenBtn.addEventListener('click', () => {
+    toggleFullscreen();
+    beep(700, 0.06, 'square', 0.05);
+  });
+  document.addEventListener('fullscreenchange', updateFullscreenBtn);
+  document.addEventListener('webkitfullscreenchange', updateFullscreenBtn);
 
   scaleSlider.addEventListener('input', () => {
     SETTINGS.scale = parseInt(scaleSlider.value, 10);

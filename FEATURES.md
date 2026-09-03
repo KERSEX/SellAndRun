@@ -25,7 +25,7 @@ rAF-Warteschleifen und Screenshots hängen manchmal am animierten Menü → lieb
 | `style.css` | Neon-Styles; Body nutzt `safe center` + `overflow:auto` (Anzeige-Skalierung) |
 | `main.js` | `GameState` (levelIndex, money, lives, bestMoney), `saveBest()`, Phaser-Config, Scene-Liste |
 | `js/audio.js` | `beep(freq,dur,type,vol,delay)` (respektiert `getVolume()`), `fanfare()`, `sadTune()` |
-| `js/settings.js` | `SETTINGS` {particles, shake, volume, scale}, `fxEnabled()`, `shakeEnabled()`, `getVolume()`, `applyDisplayScale()`, `saveSettings()`; localStorage `sar_settings` |
+| `js/settings.js` | `SETTINGS` {graphics, shake, music, volume, scale}, `graphicsLevel()`, `fxEnabled()`, `bgParallaxEnabled()`, `shakeEnabled()`, `getVolume()`, `applyDisplayScale()`, `toggleFullscreen()`, `isFullscreen()`, `saveSettings()`; localStorage `sar_settings` |
 | `js/settings-ui.js` | `window.openSettingsMenu(onClose)` — HTML-Panel |
 | `js/difficulty.js` | `DIFFICULTY_PRESETS` (leicht/normal/schwer/brutal), `getDifficulty()`, `setDifficulty(key)`, Custom-Werte; localStorage `sar_difficulty`, `sar_custom_diff` |
 | `js/difficulty-ui.js` | `window.openDiffMenu(onClose)` — HTML-Panel mit Presets + Slidern |
@@ -120,7 +120,14 @@ exitStyle ('jet'|'flag'), isGunfight (nur L5), finalLevel (nur L5)`
     GameObject-Position erst nach `update()`), und Umkehrpunkte greifen sonst zu spät.
     `mp.body.center` ist der aktuelle Stand. Beim Abmelden die `world`-Referenz vorher merken —
     in `shutdown` ist `this.physics.world` schon weg.
-17. **Bodenkontakt flackert** (bewegte Plattformen, Kanten der 40px-Bodenkacheln): Sprung nie
+17. **Partikel sind NICHT der Kostentreiber.** Gemessen (Chromium, Software-Rendering, Level 2,
+    Dauerfeuer mit 40 Partikeln alle 100 ms): Partikel an 13.8 fps vs. aus 12.2 fps — der
+    Unterschied liegt im Rauschen. Die Bildrate frisst die Fläche: beide bildschirmfüllenden
+    Parallax-TileSprites weg = 15.3 → 23.4 fps (+52 %). Ein statisches Vollbild statt eines
+    TileSprites bringt fast nichts (+4 %) — gespart wird erst, wenn die Fläche gar nicht mehr
+    gezeichnet wird. Deshalb färbt Grafikstufe NIEDRIG nur den Kamera-Hintergrund
+    (`cameras.main.setBackgroundColor`) statt eine Ersatzebene zu zeichnen.
+18. **Bodenkontakt flackert** (bewegte Plattformen, Kanten der 40px-Bodenkacheln): Sprung nie
     direkt an `blocked.down` hängen, sondern über Coyote-Time (`COYOTE_MS`) und Eingabepuffer
     (`JUMP_BUFFER_MS`) in PlayScene — sonst werden Sprünge verschluckt.
 
@@ -146,6 +153,8 @@ Innerhalb einer Phase unabhängig, Abhängigkeiten sind je Feature notiert.
   NEUSTART = beide stoppen, `scene.start('PlayScene', {levelIndex})` (levelIndex via `init(data)`
   von PlayScene durchreichen: `this.scene.launch('PauseScene', { levelIndex: this.levelIndex })`).
   HAUPTMENÜ = beide stoppen, MenuScene starten.
+- PauseScene hat neben WEITER / NEU STARTEN / HAUPTMENÜ auch EINSTELLUNGEN (öffnet dasselbe
+  HTML-Overlay wie das Hauptmenü).
 - ESC in PauseScene = WEITER. **Konflikt beachten:** die HTML-Overlays (cheat/diff/settings) nutzen
   ESC zum Schließen — in PlayScene vor dem Pausieren prüfen, dass kein Overlay offen ist:
   `document.querySelector('#cheatMenu:not(.hidden), #diffMenu:not(.hidden), #settingsMenu:not(.hidden))'` → dann nicht pausieren.
@@ -542,6 +551,7 @@ Gunfight-Schrotflinte funktioniert mit jedem Skin.
 |---|---|
 | Lauftempo / Sprungkraft | 200 px/s / −560 |
 | Coyote-Time / Sprungpuffer | 120 ms / 130 ms |
+| Grafikstufen | HOCH = Parallax + Partikel · MITTEL = ohne Partikel · NIEDRIG = einfarbiger Kamera-Hintergrund, keine Parallax-Ebenen, keine Partikel |
 | maxVelocity Spieler | 260, 900 (F7 erhöht auf 430!) |
 | Schuss (L5): Cooldown / Tempo | 0.35s / 480 px/s |
 | Gunfight-Boss: Schuss / Cooldown / Salve | 560×mult / 0.4–0.7s÷mult / jede 3. ±0.3rad |

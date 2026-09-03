@@ -12,15 +12,22 @@ class PauseScene extends Phaser.Scene {
     }).setOrigin(0.5);
     title.setShadow(0, 0, '#ff2fd0', 16, true, true);
 
-    this.makeButton(500, 285, '[ WEITER ]', '#39ff88', () => this.resumeGame());
-    this.makeButton(500, 340, '[ LEVEL NEU STARTEN ]', '#ffe94a', () => this.restartLevel());
-    this.makeButton(500, 395, '[ HAUPTMENÜ ]', '#00fff2', () => this.toMenu());
+    this.makeButton(500, 275, '[ WEITER ]', '#39ff88', () => this.resumeGame());
+    this.makeButton(500, 325, '[ EINSTELLUNGEN ]', '#9a7bff', () => window.openSettingsMenu());
+    this.makeButton(500, 375, '[ LEVEL NEU STARTEN ]', '#ffe94a', () => this.restartLevel());
+    this.makeButton(500, 425, '[ HAUPTMENÜ ]', '#00fff2', () => this.toMenu());
 
-    this.add.text(500, 465, 'ESC = Weiter   ·   Controller: START / OPTIONS', {
+    this.add.text(500, 485, 'ESC = Weiter   ·   Controller: START / OPTIONS', {
       fontSize: '12px', color: '#8a8fa0', fontFamily: 'monospace'
     }).setOrigin(0.5);
 
-    this.input.keyboard.on('keydown-ESC', () => this.resumeGame());
+    // ESC nur weiterreichen, wenn kein HTML-Overlay offen ist bzw. gerade eines
+    // damit geschlossen wurde — sonst beendet dasselbe ESC auch noch die Pause.
+    this.input.keyboard.on('keydown-ESC', () => {
+      if (document.querySelector('#cheatMenu:not(.hidden), #diffMenu:not(.hidden), #settingsMenu:not(.hidden), #statsMenu:not(.hidden), #skinsMenu:not(.hidden)')) return;
+      if (performance.now() - (window.__overlayEscAt || 0) < 200) return;
+      this.resumeGame();
+    });
   }
 
   makeButton(x, y, label, color, cb) {
